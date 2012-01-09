@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<!-- metadata, make sure 'package' is at least 2 segments (ie. com.myproject) -->
+	<app file="Lune" title="Lune" main="moonaire.lune.Main" package="com.moonaire.lune" 
+		version="1.0.0" company="Munir Hussin" />
+		
+	<!-- output -->
+	<window width="1280" height="720" fps="60" orientation="landscape" resizable="true" />
+	<set name="BUILD_DIR" value="bin" />
+    <set name="SWF_VERSION" value="11" />
+	
+	<!-- classpath, haxe libs -->
+	<classpath name="src" />
+    <classpath name="libs/Orbit/src" />
+	<haxelib name="nme" />
+	
+	<!-- assets -->
+	<icon name="assets/nme.svg" />
+	<assets path="assets" include="*" exclude="nme.svg|*-480.*" />
+        <!--
+            image resolution selection:
+            name your image files based on the target's resolution and add the -vres prefix
+            
+            eg:
+                target resolution       image name
+                1280x720                player-720.png
+                1024x576                player-576.png
+                854x480                 player-480.png
+                
+            then, when building for a 1280x720 target, exclude "*-576.*|*-480.*"
+            design for the widest screen you want to support, keeping in mind that
+                the sides will be cropped off
+        -->
+    
+	<!-- DLLs -->
+	<ndll name="std" />
+	<ndll name="regexp" />
+	<ndll name="zlib" />
+	<ndll name="nme" haxelib="nme" />
+	
+	<!-- Windows app: hide console -->
+	<!--<setenv name="no_console" value="1" />-->
+</project>

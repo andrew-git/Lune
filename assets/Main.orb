@@ -1,0 +1,18 @@
+
+(print "Loading game")
+
+// load definitions
+(require "scripts/Layers")
+(require "scripts/Images")
+(require "scripts/Worlds")
+(require "scripts/Entities")
+(require "scripts/Audio")
+
+
+// get lune instance
+(var lune Lune.instance)
+
+// create the world
+(var world (lune.createWorld "Game"))
+
+(print "Done")

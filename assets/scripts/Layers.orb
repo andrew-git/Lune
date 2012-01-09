@@ -1,0 +1,19 @@
+// Copyright 2012 Moonaire. All rights reserved
+// See licensing information for more usage rights
+
+
+(Layer.define "Static"
+{
+    properties:
+    {
+        isFixed: true
+    }
+})
+
+(Layer.define "Scroll"
+{
+    properties:
+    {
+        isFixed: false
+    }
+})
