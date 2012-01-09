@@ -1,17 +1,21 @@
-package moonaire.lune.core;
+package moonaire.lune.audio;
 
 import moonaire.lune.Lune;
 import moonaire.lune.util.HashTools;
 import moonaire.orbit.Function;
 import moonaire.orbit.structs.DList;
 import moonaire.orbit.structs.DListIterator;
+import nme.display.Sprite;
+import nme.media.Sound;
+import nme.media.SoundChannel;
+import nme.media.SoundTransform;
 
 /**
  * ...
  * @author Munir Hussin
  */
 
-class Entity implements Dynamic
+class Audio implements Dynamic
 {
     // base stuff
     public static var defs:Hash<Hash<Dynamic>> = new Hash<Hash<Dynamic>>();
@@ -21,44 +25,34 @@ class Entity implements Dynamic
     // static properties
     public var settings:Hash<Dynamic>;
     
-    // TODO: internal properties
-    //private var components:DList<Component>;
-    //private var componentIterator:DListIterator<Component>;
+    // internal properties
+    var sound:Sound;
     
     // base properties
-    public var world:World;
     public var isActive:Bool;
     public var isDestroyed(default, null):Bool;
     public var hasDisposed(default, null):Bool;
-    public var stateTime:Float;
-    public var thinkTime:Float;
     
     // events
     public var onCreate:Dynamic;
     public var onDestroy:Dynamic;
     public var onUpdate:Dynamic;
-    public var onState:Dynamic;
-    public var onThink:Dynamic;
+    public var onSort:Dynamic;
     
     
-    public function new(world:World, name:String, ?init:Hash<Dynamic>)
+    public function new(name:String, ?init:Hash<Dynamic>)
     {
         //super();
         
         // base initialization
-        this.world = world;
-        this.lune = world.lune;
+        this.lune = Lune.instance;
         
         // internal properties initialization
-        //components = new DList<Entity>();
-        //componentIterator = components.iterator();
         
         // defaults
         isActive = false;
         isDestroyed = false;
         hasDisposed = false;
-        stateTime = 0;
-        thinkTime = 0;
         
         // instance initialization
         var def:Hash<Dynamic> = defs.get(name);
@@ -68,6 +62,16 @@ class Entity implements Dynamic
             HashTools.copyIntoObject(def.get("properties"), this);
             HashTools.copyIntoObject(init, this);
             settings = def.get("settings");
+            
+            if (settings != null)
+            {
+                var sndFile:String = settings.get("sound");
+                
+                if (sndFile != null)
+                {
+                    sound = lune.resource.loadSound(sndFile);
+                }
+            }
         }
         
         // keep count
@@ -103,29 +107,16 @@ class Entity implements Dynamic
             Function.apply(this, onDestroy, [], null);
             
             // cleanup
+            if (sound != null) sound.close();
+            
             settings = null;
             lune = null;
-            world = null;
             count--;
         }
     }
     
-    public function update(dt:Float, fdt:Float):Void
+    public function play(?start:Float = 0, ?loop:Int = 0, ?transform:SoundTransform):SoundChannel
     {
-        stateTime += dt;
-        
-        if (thinkTime > 0)
-        {
-            thinkTime -= dt;
-            
-            if (thinkTime <= 0)
-            {
-                // raise think event
-                Function.apply(this, onThink, [dt, fdt], null);
-            }
-        }
-        
-        // raise update event
-        Function.apply(this, onUpdate, [dt, fdt], null);
+        return (sound == null) ? null : sound.play(start, loop, transform);
     }
 }

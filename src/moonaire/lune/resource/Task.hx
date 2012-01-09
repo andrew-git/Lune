@@ -21,22 +21,12 @@ class Task
         this.n = 0;
     }
     
-    public dynamic function onStart():Void
-    {
-        // this is used to figure out the values of i and n
-        // after this function has exited, update the value
-        // of i in the onExecute method, but DO NOT modify n.
-    }
-    
-    public dynamic function onComplete():Void
-    {
-        // do cleanup or whatever
-    }
-    
-    public dynamic function onExecute():Void
-    {
-        
-    }
+    // this is used to figure out the values of i and n
+    // after this function has exited, update the value
+    // of i in the onExecute method, but DO NOT modify n.
+    public var onStart:Dynamic;
+    public var onComplete:Dynamic;
+    public var onExecute:Dynamic;
     
     private function getProgress():Float
     {

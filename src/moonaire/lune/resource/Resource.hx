@@ -1,5 +1,6 @@
 package moonaire.lune.resource;
 
+import moonaire.lune.Lune;
 import nme.Assets;
 import nme.display.BitmapData;
 import nme.media.Sound;
@@ -20,16 +21,28 @@ import nme.utils.ByteArray;
 
 class Resource 
 {
-    private static var image:Hash<BitmapData> = new Hash<BitmapData>();
-    private static var data:Hash<ByteArray> = new Hash<ByteArray>();
-    private static var font:Hash<Font> = new Hash<Font>();
-    private static var sound:Hash<Sound> = new Hash<Sound>();
-    private static var text:Hash<String> = new Hash<String>();
+    private var lune:Lune;
+    
+    private var image:Hash<BitmapData>;
+    private var data:Hash<ByteArray>;
+    private var font:Hash<Font>;
+    private var sound:Hash<Sound>;
+    private var text:Hash<String>;
     
     
-    public function new() 
+    public function new(lune:Lune)
     {
-        
+        this.lune = lune;
+        image = new Hash<BitmapData>();
+        data = new Hash<ByteArray>();
+        font = new Hash<Font>();
+        sound = new Hash<Sound>();
+        text = new Hash<String>();
+    }
+    
+    public function free():Void
+    {
+        // TODO: goes through all entities, and release textures and sounds that are not in use
     }
     
     public function loadImage(id:String):BitmapData
@@ -75,7 +88,6 @@ class Resource
         if (data.exists(id))
         {
             var res:ByteArray = data.get(id);
-            res.clear();
             data.remove(id);
         }
     }

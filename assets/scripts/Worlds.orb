@@ -1,0 +1,160 @@
+// Copyright 2012 Moonaire. All rights reserved
+// See licensing information for more usage rights
+
+(function createText (text size color)
+    (var lune Lune.instance)
+    (var font (lune.resource.loadFont "assets/fonts/BLUEHIGH.TTF"))
+    (var format (new TextFormat font.fontName))
+    (set format.size size)
+    (set format.color color)
+    
+    (var message (new TextField))
+    (set message.defaultTextFormat format)
+    (set message.embedFonts true)
+    (set message.selectable false)
+    (set message.text text)
+    
+    (return message)
+)
+
+(function padZero (num)
+    (if (< num 10) (+ "0" num) num)
+)
+
+(function formatTime (time)
+    (var hh (Math.floor (/ time 3600)))
+    (var div (% time 3600))
+    (var mm (Math.floor (/ div 60)))
+    (var ss (Math.floor (% div 60)))
+    (return (+ (padZero hh) ":" (padZero mm) ":" (padZero ss)))
+)
+
+
+(World.define "Game"
+{
+    properties:
+    {
+        // game state const
+        STATE_MENU: 0
+        STATE_GAME: 1
+        STATE_OVER: 2
+        
+        isActive: true
+        gravity: -98
+        timeFactor: 1.2
+        state: 0
+        
+        time: 0.0
+        points: 0
+        bonusTimer: 5
+        bonusInit: 5
+        
+        onCreate:
+            (function ()
+                (print "World created")
+                
+                // load music
+                //(var music (new Audio "Music"))
+                //(music.play 0 -1)
+                // play(start:Float, loop:int, transform:SoundTransform):SoundChannel
+                
+                // create images
+                (var background (new Image this.backgroundLayer "Background"))
+                (var ground (new Image this.backgroundLayer "Ground"))
+                (var title (new Image this.guiLayer "Title"))
+                
+                // reposition the title
+                (+= title.x 240)
+                (-= title.y 180)
+                (set this.titleTop title.y)
+                
+                // create text field
+                (var message (createText "Time: 00:00:00\nPoints: 0" 50 0xFFFFFF))
+                (set message.width 500)
+                (+= message.x 100)
+                (-= message.y 350)
+                (set message.visible false)
+                (set this.guiLayer.mouseEnabled false)
+                (set this.guiLayer.mouseChildren false)
+                
+                (this.guiLayer.addChild message)
+                
+                // remember them
+                (set this.background background)
+                (set this.ground ground)
+                (set this.title title)
+                (set this.message message)
+                
+                // create entities
+                (set this.button (this.createEntity "Button"))
+                (set this.contraption (this.createEntity "Contraption"))
+            )
+            
+        onDestroy:
+            (function ()
+                // destroy images
+                (this.background.destroy)
+                (this.ground.destroy)
+                (this.title.destroy)
+                
+                // remove references
+                (set this.background null)
+                (set this.ground null)
+                (set this.title null)
+                (set this.message null)
+                (set this.button null)
+                (set this.contraption null)
+            )
+            
+        onUpdate:
+            (function (dt fdt)
+                (var title this.title)
+                (var state this.state)
+                
+                (cond
+                    ((== state this.STATE_MENU)
+                        null
+                    )
+                    ((== state this.STATE_GAME)
+                        (begin
+                            // update time
+                            (set this.message.text (+ "Time: " (formatTime this.time) "\nPoints: " this.points))
+                            
+                            (if (> title.alpha 0)
+                                (begin
+                                    //(tween title 'alpha 0)
+                                    (var alpha title.alpha)
+                                    (-= alpha (* 3 dt))
+                                    (set title.alpha (if (< alpha 0) 0 alpha))
+                                    (-= title.y (* 200 dt))
+                                )
+                            )
+                            
+                            // every x time, create bonus
+                            (if (> this.bonusTimer 0)
+                                (-= this.bonusTimer dt)
+                                (begin
+                                    (this.createEntity "Bonus")
+                                    (set this.bonusTimer this.bonusInit)
+                                )
+                            )
+                        )
+                    )
+                    ((== state this.STATE_OVER)
+                        null
+                    )
+                )
+            )
+    }
+    
+    settings:
+    {
+        layers:
+        '(
+            backgroundLayer: Static
+            groundLayer: Scroll
+            bloodLayer: Scroll
+            guiLayer: Static
+        )
+    }
+})

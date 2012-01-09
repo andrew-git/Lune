@@ -33,21 +33,29 @@ class Display
     
     public var lune:Lune;
     public var stage:Stage;
-    public var display:Sprite;
+    public var view:Sprite;
+    public var debug:Sprite;
     
     public var scaleMode:Int;
     
-    public var originalWidth:Int;
-    public var originalHeight:Int;
-    public var originalCenterX:Float;
-    public var originalCenterY:Float;
+    public var realWidth:Int;
+    public var realHeight:Int;
+    public var realCenterX:Float;
+    public var realCenterY:Float;
+    
+    public var virtualWidth:Float;
+    public var virtualHeight:Float;
     
     
     public function new(lune:Lune) 
     {
         this.lune = lune;
-        display = new Sprite();
-        Lib.current.addChild(display);
+        
+        view = new Sprite();
+        debug = new Sprite();
+        
+        Lib.current.addChild(view);
+        Lib.current.addChild(debug);
         
         scaleMode = ALIGN_CENTER_SCALE_CROP;
         
@@ -56,12 +64,37 @@ class Display
         stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.addEventListener(Event.RESIZE, stage_onResize);
         
-        originalWidth = stage.stageWidth;
-        originalHeight = stage.stageHeight;
-        originalCenterX = originalWidth / 2;
-        originalCenterY = originalHeight / 2;
+        realWidth = stage.stageWidth;
+        realHeight = stage.stageHeight;
+        realCenterX = realWidth / 2;
+        realCenterY = realHeight / 2;
+        
+        // virtualHeight is a constant fixed to 720 (highest resolution)
+        virtualHeight = 720;
+        virtualWidth = virtualHeight * realWidth / realHeight;
         
         stage_onResize(null);
+    }
+    
+    
+    public function realToVirtualX(realX:Float):Float
+    {
+        return virtualWidth * realX / realWidth;
+    }
+    
+    public function realToVirtualY(realY:Float):Float
+    {
+        return virtualHeight * realY / realHeight;
+    }
+    
+    public function virtualToRealX(virtualX:Float):Float
+    {
+        return realWidth * virtualX / virtualWidth;
+    }
+    
+    public function virtualToRealY(virtualY:Float):Float
+    {
+        return realHeight * virtualY / virtualWidth;
     }
     
     
@@ -71,10 +104,10 @@ class Display
         // a rectangle in the middle of that, and another rectangle
         // somewhere else. helps to visualize display scaling
         
-        var gfx:Graphics = display.graphics;
+        var gfx:Graphics = view.graphics;
         
         gfx.beginFill(0xFF0000, 0.4);
-            gfx.drawRect(-originalCenterX, -originalCenterY, originalWidth, originalHeight);
+            gfx.drawRect(-realCenterX, -realCenterY, realWidth, realHeight);
         gfx.endFill();
         
         gfx.beginFill(0x00FF00, 0.4);
@@ -89,7 +122,7 @@ class Display
             gfx.drawRect(10, 50, 300, 300);
         gfx.endFill();
         
-        display.addChild(sub);
+        view.addChild(sub);
     }
     
     
@@ -115,24 +148,28 @@ class Display
     
     public inline function alignCenterScaleCrop():Void
     {
-        var scale:Float = getFillScale(stage.stageWidth, stage.stageHeight, originalWidth, originalHeight);
-        display.scaleX = scale;
-        display.scaleY = scale;
+        var scale:Float = getFillScale(stage.stageWidth, stage.stageHeight, realWidth, realHeight);
+        view.scaleX = scale;
+        view.scaleY = scale;
+        debug.scaleX = scale;
+        debug.scaleY = scale;
         alignCenterNoScale();
     }
     
     public inline function alignCenterScaleNoCrop():Void
     {
-        var scale:Float = getFitScale(stage.stageWidth, stage.stageHeight, originalWidth, originalHeight);
-        display.scaleX = scale;
-        display.scaleY = scale;
+        var scale:Float = getFitScale(stage.stageWidth, stage.stageHeight, realWidth, realHeight);
+        view.scaleX = scale;
+        view.scaleY = scale;
+        debug.scaleX = scale;
+        debug.scaleY = scale;
         alignCenterNoScale();
     }
     
     public inline function alignCenterNoScale():Void
     {
-        display.x = stage.stageWidth / 2;
-        display.y = stage.stageHeight / 2;
+        view.x = stage.stageWidth / 2;
+        view.y = stage.stageHeight / 2;
     }
     
     private function stage_onResize(event:Event):Void

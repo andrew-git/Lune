@@ -6,37 +6,34 @@ import moonaire.lune.core.World;
 import moonaire.lune.resource.Process;
 import moonaire.lune.resource.Resource;
 import moonaire.orbit.Orbit;
+import moonaire.orbit.structs.DList;
+import moonaire.orbit.structs.DListIterator;
+import nme.Assets;
+import nme.text.Font;
+import nme.text.TextField;
+import nme.text.TextFormat;
 
 import nme.events.Event;
 import nme.Lib;
 
 /**
- * Lune is a game engine designed to create an abstract between
- * 2D sprites and 3D models (for games in a more-or-less, 2D world).
- * 
- * The idea is that, you can rapidly create a 2D game using a 2D
- * library like NME. And then, later on, you can replace the 2D
- * sprites with 3D models, and use some other 3D library, and
- * with the same code-base, it'll still work.
- * 
- * Lune is not a graphics engine. It is a game engine that abstracts
- * 2D and 3D games by providing similar API for sprites and models.
- * 
- * Currently everything is in 2D using NME, and design decisions
- * will be made with the above idea in mind.
+ * Lune is a game engine.
  * 
  * @author Munir Hussin
  */
 
 class Lune 
 {
+    public static var instance(getInstance, null):Lune;
+    
     public var display:Display;
     public var console:Console;
     public var process:Process;
     public var resource:Resource;
     public var script:Orbit;
     
-    public var world:World;
+    private var worlds:DList<World>;
+    private var worldIterator:DListIterator<World>;
     
     private var timePrev:Int;
     private var frameCount:Int;
@@ -44,6 +41,7 @@ class Lune
     public var timeFactor:Float;
     
     public var FPS(default, null):Float;
+    private var debugText:TextField;
     
     
     public function new() 
@@ -51,8 +49,11 @@ class Lune
         display = new Display(this);
         console = new Console(this);
         process = new Process();
-        resource = new Resource();
+        resource = new Resource(this);
         script = new Orbit();
+        
+        worlds = new DList<World>();
+        worldIterator = worlds.iterator();
         
         timePrev = 0;
         frameCount = 0;
@@ -60,6 +61,28 @@ class Lune
         timeFactor = 1;
         
         display.stage.addEventListener(Event.ENTER_FRAME, onUpdate);
+        
+        var font:Font = resource.loadFont("assets/fonts/BLUEHIGH.TTF");
+        var format:TextFormat = new TextFormat(font.fontName);
+        format.size = 20;
+        format.color = 0x0000ff;
+        
+        debugText = new TextField();
+        debugText.defaultTextFormat = format;
+        debugText.embedFonts = true;
+        debugText.selectable = false;
+        debugText.x = 0;
+        debugText.y = 0;
+        //debugText.textColor = 0xff0000;
+        debugText.text = "Hello";
+        
+        display.debug.addChild(debugText);
+    }
+    
+    private static function getInstance():Lune
+    {
+        if (instance == null) instance = new Lune();
+        return instance;
     }
     
     private function onUpdate(event:Event):Void
@@ -76,13 +99,33 @@ class Lune
         if (dt > 0.05) dt = 0.05;
         
         // bullet time!
-        var kdt:Float = timeFactor * dt;
+        var fdt:Float = timeFactor * dt;
         
         // update processes
-        process.update(dt, kdt);
+        process.update(dt, fdt);
         
-        // update world
-        if (world != null) world.update(dt, kdt);
+        // update worlds
+        var world:World;
+        worldIterator.first();
+        
+        while (worldIterator.hasNext())
+        {
+            world = worldIterator.peek();
+            
+            if (world.isActive && !world.isDestroyed)
+            {
+                world.update(dt, fdt);
+            }
+                
+            if (world.isDestroyed)
+            {
+                world.dispose();
+                worldIterator.remove();
+                display.view.removeChild(world);
+            }
+            
+            worldIterator.next();
+        }
         
         // calculate fps
         frameCount += 1;
@@ -94,18 +137,18 @@ class Lune
             FPS = frameCount;
             frameCount = 0;
             timePassed %= 1000;
+            debugText.text = "FPS: " + FPS;
         }
         
         timePrev = timeCurr;
     }
     
-    public function loadWorld(w:World):Void
+    public function createWorld(name:String, ?init:Hash<Dynamic>):World
     {
-        // unload the existing world first
-        if (world != null) world.destroy();
-        
-        // initialize the world
-        world = w;
+        var world:World = new World(this, name, init);
+        worlds.push(world);
+        world.create();
+        return world;
     }
     
 }
