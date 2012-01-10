@@ -1,14 +1,26 @@
 package moonaire.lune;
 
+import moonaire.lune.audio.Audio;
 import moonaire.lune.core.Console;
 import moonaire.lune.core.Display;
+import moonaire.lune.core.Entity;
+import moonaire.lune.core.Layer;
 import moonaire.lune.core.World;
+import moonaire.lune.graphics.Image;
 import moonaire.lune.resource.Process;
 import moonaire.lune.resource.Resource;
+import moonaire.lune.resource.Task;
 import moonaire.orbit.Orbit;
 import moonaire.orbit.structs.DList;
 import moonaire.orbit.structs.DListIterator;
 import nme.Assets;
+import nme.display.Bitmap;
+import nme.display.Sprite;
+import nme.events.AccelerometerEvent;
+import nme.events.KeyboardEvent;
+import nme.events.MouseEvent;
+import nme.events.TouchEvent;
+import nme.media.Sound;
 import nme.text.Font;
 import nme.text.TextField;
 import nme.text.TextFormat;
@@ -62,10 +74,28 @@ class Lune
         
         display.stage.addEventListener(Event.ENTER_FRAME, onUpdate);
         
-        var font:Font = resource.loadFont("assets/fonts/BLUEHIGH.TTF");
+        setupDebug();
+        setupScript();
+    }
+    
+    private static function getInstance():Lune
+    {
+        if (instance == null) instance = new Lune();
+        return instance;
+    }
+    
+    public function start():Void
+    {
+        // start script
+        script.require("Main");
+    }
+    
+    private function setupDebug():Void
+    {
+        var font:Font = resource.loadFont("assets/lune/fonts/VeraMono.ttf");
         var format:TextFormat = new TextFormat(font.fontName);
-        format.size = 20;
-        format.color = 0x0000ff;
+        format.size = 12;
+        format.color = 0x000000;
         
         debugText = new TextField();
         debugText.defaultTextFormat = format;
@@ -79,11 +109,37 @@ class Lune
         display.debug.addChild(debugText);
     }
     
-    private static function getInstance():Lune
+    private function setupScript():Void
     {
-        if (instance == null) instance = new Lune();
-        return instance;
+        // set classpaths
+        script.classpaths.push("assets/");
+        
+        // create bindings
+        script.bind(Lune, "Lune", true);
+        script.bind(Display, "Display", true);
+        script.bind(Process, "Process", true);
+        script.bind(Resource, "Resource", true);
+        script.bind(Task, "Task", true);
+        
+        script.bind(World, "World", true);
+        script.bind(Entity, "Entity", true);
+        script.bind(Layer, "Layer", true);
+        script.bind(Image, "Image", true);
+        script.bind(Audio, "Audio", true);
+        
+        script.bind(Event, "Event", true);
+        script.bind(MouseEvent, "MouseEvent", true);
+        script.bind(KeyboardEvent, "KeyboardEvent", true);
+        script.bind(TouchEvent, "TouchEvent", true);
+        script.bind(AccelerometerEvent, "AccelerometerEvent", true);
+        
+        script.bind(Bitmap, "Bitmap", true);
+        script.bind(Sprite, "Sprite", true);
+        script.bind(TextField, "TextField", true);
+        script.bind(TextFormat, "TextFormat", true);
+        script.bind(Sound, "Sound", true);
     }
+    
     
     private function onUpdate(event:Event):Void
     {

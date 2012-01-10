@@ -45,6 +45,7 @@ class Display
     
     public var virtualWidth:Float;
     public var virtualHeight:Float;
+    public var verticalResolution:Int;
     
     
     public function new(lune:Lune) 
@@ -64,8 +65,11 @@ class Display
         stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.addEventListener(Event.RESIZE, stage_onResize);
         
-        realWidth = stage.stageWidth;
-        realHeight = stage.stageHeight;
+        // realWidth/realHeight is the window width/height
+        //realWidth = stage.stageWidth;
+        //realHeight = stage.stageHeight;
+        realWidth = 1280;
+        realHeight = 720;
         realCenterX = realWidth / 2;
         realCenterY = realHeight / 2;
         

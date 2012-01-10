@@ -5,7 +5,9 @@ import moonaire.lune.util.HashTools;
 import moonaire.orbit.Function;
 import moonaire.orbit.structs.DList;
 import moonaire.orbit.structs.DListIterator;
+import nme.Assets;
 import nme.display.Sprite;
+import nme.events.Event;
 import nme.media.Sound;
 import nme.media.SoundChannel;
 import nme.media.SoundTransform;
@@ -26,7 +28,11 @@ class Audio implements Dynamic
     public var settings:Hash<Dynamic>;
     
     // internal properties
+    var start:Float;
+    var loop:Int;
+    var transform:SoundTransform;
     var sound:Sound;
+    var channels:Array<SoundChannel>;
     
     // base properties
     public var isActive:Bool;
@@ -48,6 +54,7 @@ class Audio implements Dynamic
         this.lune = Lune.instance;
         
         // internal properties initialization
+        channels = new Array<SoundChannel>();
         
         // defaults
         isActive = false;
@@ -70,6 +77,9 @@ class Audio implements Dynamic
                 if (sndFile != null)
                 {
                     sound = lune.resource.loadSound(sndFile);
+                    //sound = Assets.getSound(sndFile);
+                    
+                    var loop:Bool = settings.get("smoothing");
                 }
             }
         }
@@ -115,8 +125,42 @@ class Audio implements Dynamic
         }
     }
     
+    public function onPlayComplete(event:Event):Void
+    {
+        if (loop != 0)
+        {
+            loop--;
+            channels.remove(event.currentTarget);
+            play(start, loop, transform);
+        }
+    }
+    
     public function play(?start:Float = 0, ?loop:Int = 0, ?transform:SoundTransform):SoundChannel
     {
-        return (sound == null) ? null : sound.play(start, loop, transform);
+        if (sound != null)
+        {
+            this.start = start;
+            this.loop = loop;
+            this.transform = transform;
+            
+            var channel:SoundChannel = sound.play(start, 0, transform);
+            channels.push(channel);
+            channel.addEventListener( Event.SOUND_COMPLETE, onPlayComplete );
+            return channel;
+        }
+        
+        return null;
+    }
+    
+    public function stop():Void
+    {
+        var channel:SoundChannel;
+        loop = 0;
+        
+        while (channels.length > 0)
+        {
+            channel = channels.pop();
+            channel.stop();
+        }
     }
 }
